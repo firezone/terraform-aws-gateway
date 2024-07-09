@@ -5,7 +5,7 @@ locals {
 }
 
 module "aws_firezone_gateway" {
-  source = "github.com/firezone/terraform/modules/aws/firezone-gateway"
+  source = "github.com/firezone/terraform-firezone-aws"
 
   ###################
   # Required inputs #
