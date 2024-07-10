@@ -4,8 +4,8 @@ locals {
   firezone_token = "YOUR_FIREZONE_TOKEN"
 }
 
-module "aws_firezone_gateway" {
-  source = "github.com/firezone/terraform-firezone-aws"
+module "gateway" {
+  source = "firezone/gateway/aws"
 
   ###################
   # Required inputs #
