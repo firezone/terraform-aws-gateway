@@ -30,6 +30,11 @@ module "gateway" {
   # Optional inputs #
   ###################
 
+  # We recommend a minimum of 3 instances for high availability.
+  # min_size            = 3
+  # max_size            = 10
+  # desired_capacity    = 10
+
   # Deploy a specific version of the Gateway. Generally, we recommend using the latest version.
   # firezone_version    = "latest"
 
@@ -39,11 +44,6 @@ module "gateway" {
   # Gateways are very lightweight.
   # See https://www.firezone.dev/kb/deploy/gateways#sizing-recommendations.
   # instance_type       = "t3.nano"
-
-  # We recommend a minimum of 3 instances for high availability.
-  # min_size            = 3
-  # max_size            = 5
-  # desired_capacity    = 3
 }
 
 data "aws_ami_ids" "ubuntu" {
