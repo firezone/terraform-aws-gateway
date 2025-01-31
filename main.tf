@@ -1,15 +1,11 @@
-resource "aws_launch_configuration" "lc" {
-  name                        = "firezone-gateway-lc"
-  image_id                    = var.base_ami
-  instance_type               = var.instance_type
-  security_groups             = var.instance_security_groups
-  associate_public_ip_address = false
+resource "aws_launch_template" "lt" {
+  name                          = "firezone-gateway-lt"
+  image_id                      = var.base_ami
+  instance_type                 = var.instance_type
+  vpc_security_group_ids        = var.instance_security_groups
+  update_default_version        = true
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  user_data = <<-EOF
+  user_data = base64encode(<<-EOF
   #!/bin/bash
   set -e
 
@@ -24,6 +20,7 @@ resource "aws_launch_configuration" "lc" {
   bash <(curl -fsSL https://raw.githubusercontent.com/firezone/firezone/main/scripts/gateway-systemd-install.sh)
 
   EOF
+  )
 }
 
 resource "aws_autoscaling_group" "asg" {
@@ -31,7 +28,10 @@ resource "aws_autoscaling_group" "asg" {
   max_size             = var.max_size
   min_size             = var.min_size
   vpc_zone_identifier  = [var.private_subnet]
-  launch_configuration = aws_launch_configuration.lc.id
+  launch_template {
+    id                 = aws_launch_template.lt.id
+    version            = "$Default"
+  }
 
   tag {
     key                 = "Name"
