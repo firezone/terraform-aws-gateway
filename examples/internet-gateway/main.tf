@@ -20,7 +20,6 @@ module "gateway" {
 
   # Attach the Gateways to your VPC and subnets.
   vpc            = aws_vpc.main.id
-  public_subnet  = aws_subnet.public.id
   private_subnet = aws_subnet.private.id
   instance_security_groups = [
     aws_security_group.instance.id
@@ -29,6 +28,9 @@ module "gateway" {
   ###################
   # Optional inputs #
   ###################
+
+  # Whether to attach the instances to a public subnet.
+  # attach_public_subnet = true
 
   # We recommend a minimum of 3 instances for high availability.
   # replicas           = 3
