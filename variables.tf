@@ -9,22 +9,10 @@ variable "instance_type" {
   default     = "t3.nano"
 }
 
-variable "desired_capacity" {
-  description = "The desired number of instances"
+variable "replicas" {
+  description = "The number of gateway instances to launch"
   type        = number
   default     = 3
-}
-
-variable "min_size" {
-  description = "The minimum number of instances"
-  type        = number
-  default     = 3
-}
-
-variable "max_size" {
-  description = "The maximum number of instances"
-  type        = number
-  default     = 5
 }
 
 variable "firezone_token" {
@@ -41,7 +29,7 @@ variable "firezone_version" {
 }
 
 variable "firezone_name" {
-  description = "Name for the Gateways used in the admin portal"
+  description = "Name for the Gateways, appears in the admin portal"
   type        = string
   default     = "$(hostname)"
 }

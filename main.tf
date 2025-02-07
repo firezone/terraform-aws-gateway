@@ -1,9 +1,13 @@
-resource "aws_launch_template" "lt" {
-  name                          = "firezone-gateway-lt"
-  image_id                      = var.base_ami
-  instance_type                 = var.instance_type
-  vpc_security_group_ids        = var.instance_security_groups
-  update_default_version        = true
+resource "aws_instance" "gateway" {
+  count           = var.replicas
+  ami             = var.base_ami
+  instance_type   = var.instance_type
+  subnet_id       = var.private_subnet
+  security_groups = var.instance_security_groups
+
+  # We will attach a public IP to the instances ourselves.
+  # Intended to minimize IP churn.
+  associate_public_ip_address = false
 
   user_data = base64encode(<<-EOF
   #!/bin/bash
@@ -21,34 +25,27 @@ resource "aws_launch_template" "lt" {
 
   EOF
   )
+
+  tags = merge({
+    Name = "firezone-gateway-instance"
+  }, var.extra_tags)
 }
 
-resource "aws_autoscaling_group" "asg" {
-  desired_capacity     = var.desired_capacity
-  max_size             = var.max_size
-  min_size             = var.min_size
-  vpc_zone_identifier  = [var.private_subnet]
-  launch_template {
-    id                 = aws_launch_template.lt.id
-    version            = "$Default"
-  }
+# Create one Elastic IP per Gateway instance.
+resource "aws_eip" "gateway" {
+  count  = var.replicas
+  domain = "vpc"
+}
 
-  tag {
-    key                 = "Name"
-    value               = "firezone-gateway-instance"
-    propagate_at_launch = true
-  }
+# Associate the Elastic IPs with the Gateway instances.
+resource "aws_eip_association" "gateway" {
+  count         = var.replicas
+  instance_id   = aws_instance.gateway[count.index].id
+  allocation_id = aws_eip.gateway[count.index].id
+}
 
-  dynamic "tag" {
-    for_each = var.extra_tags
-    content {
-      key                 = tag.value.key
-      propagate_at_launch = tag.value.propagate_at_launch
-      value               = tag.value.value
-    }
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
+# Output the Elastic IPs for the Gateway instances.
+output "public_ips" {
+  description = "The public IPs of the Gateway instances"
+  value       = aws_eip.gateway[*].public_ip
 }

@@ -1,7 +1,7 @@
 # Change these to match your environment
 locals {
   region         = "us-east-1"
-  firezone_token = "YOUR_FIREZONE_TOKEN"
+  firezone_token = "<YOUR TOKEN HERE>"
 }
 
 module "gateway" {
@@ -31,9 +31,7 @@ module "gateway" {
   ###################
 
   # We recommend a minimum of 3 instances for high availability.
-  # min_size            = 3
-  # max_size            = 10
-  # desired_capacity    = 10
+  # replicas           = 3
 
   # Deploy a specific version of the Gateway. Generally, we recommend using the latest version.
   # firezone_version    = "latest"
@@ -67,9 +65,11 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "172.16.0.0/24"
-  map_public_ip_on_launch = true
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "172.16.0.0/24"
+
+  # We will attach a public IP to the instances ourselves.
+  map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "private" {
@@ -79,15 +79,6 @@ resource "aws_subnet" "private" {
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
-}
-
-resource "aws_eip" "nat" {
-  domain = "vpc"
-}
-
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
 }
 
 resource "aws_route_table" "public" {
@@ -103,8 +94,8 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
@@ -134,15 +125,8 @@ resource "aws_security_group" "instance" {
 
   egress {
     from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -175,7 +159,6 @@ resource "aws_ec2_instance_connect_endpoint" "instance_connect_endpoint" {
   }
 }
 
-output "nat_public_ip" {
-  description = "The public IP of the NAT gateway"
-  value       = aws_eip.nat.public_ip
+output "gateway_ips" {
+  value = module.gateway.public_ips
 }
