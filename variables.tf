@@ -10,7 +10,7 @@ variable "instance_type" {
 }
 
 variable "replicas" {
-  description = "The number of gateway instances to launch"
+  description = "The number of gateway instances to deploy"
   type        = number
   default     = 3
 }
@@ -50,9 +50,10 @@ variable "private_subnet" {
   type        = string
 }
 
-variable "public_subnet" {
-  description = "The public subnet id"
-  type        = string
+variable "attach_public_ip" {
+  description = "Whether to attach a public IP to the instances"
+  type        = bool
+  default     = true
 }
 
 variable "instance_security_groups" {
@@ -61,7 +62,7 @@ variable "instance_security_groups" {
 }
 
 variable "extra_tags" {
-  description = "Extra tags for the Auto Scaling group"
+  description = "Extra tags for the instances"
 
   type = map(object({
     key                 = string

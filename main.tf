@@ -33,13 +33,13 @@ resource "aws_instance" "gateway" {
 
 # Create one Elastic IP per Gateway instance.
 resource "aws_eip" "gateway" {
-  count  = var.replicas
+  count  = var.attach_public_ip ? var.replicas : 0
   domain = "vpc"
 }
 
 # Associate the Elastic IPs with the Gateway instances.
 resource "aws_eip_association" "gateway" {
-  count         = var.replicas
+  count         = var.attach_public_ip ? var.replicas : 0
   instance_id   = aws_instance.gateway[count.index].id
   allocation_id = aws_eip.gateway[count.index].id
 }
