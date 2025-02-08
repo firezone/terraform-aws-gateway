@@ -29,8 +29,8 @@ module "gateway" {
   # Optional inputs #
   ###################
 
-  # Whether to attach the instances to a public subnet.
-  # attach_public_subnet = true
+  # Whether to attach the instances to public IPs.
+  # attach_public_ips = true
 
   # We recommend a minimum of 3 instances for high availability.
   # replicas           = 3

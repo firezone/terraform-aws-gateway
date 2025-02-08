@@ -50,8 +50,8 @@ variable "private_subnet" {
   type        = string
 }
 
-variable "attach_public_subnet" {
-  description = "Whether to attach a public subnet to the instances"
+variable "attach_public_ips" {
+  description = "Whether to attach public IPs to the instances"
   type        = bool
   default     = true
 }
