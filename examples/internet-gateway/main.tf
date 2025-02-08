@@ -1,7 +1,8 @@
 # Change these to match your environment
 locals {
-  region         = "us-east-1"
-  firezone_token = "<YOUR TOKEN HERE>"
+  region            = "us-east-1"
+  availability_zone = "us-east-1a"
+  firezone_token    = "<YOUR TOKEN HERE>"
 }
 
 module "gateway" {
@@ -44,6 +45,9 @@ module "gateway" {
   # Gateways are very lightweight.
   # See https://www.firezone.dev/kb/deploy/gateways#sizing-recommendations.
   # instance_type       = "t3.nano"
+
+  # Availability zone to deploy the instances in.
+  availability_zone = local.availability_zone
 }
 
 data "aws_ami_ids" "ubuntu" {
@@ -67,16 +71,18 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "172.16.0.0/24"
+  availability_zone = local.availability_zone
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.0.0/24"
 
   # We will attach a public IP to the instances ourselves.
   map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "172.16.1.0/24"
+  availability_zone = local.availability_zone
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.1.0/24"
 }
 
 resource "aws_internet_gateway" "gw" {

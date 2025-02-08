@@ -1,9 +1,10 @@
 resource "aws_instance" "gateway" {
-  count           = var.replicas
-  ami             = var.base_ami
-  instance_type   = var.instance_type
-  subnet_id       = var.private_subnet
-  security_groups = var.instance_security_groups
+  availability_zone = var.availability_zone
+  count             = var.replicas
+  ami               = var.base_ami
+  instance_type     = var.instance_type
+  subnet_id         = var.private_subnet
+  security_groups   = var.instance_security_groups
 
   # We will attach a public IP to the instances ourselves.
   # Intended to minimize IP churn.

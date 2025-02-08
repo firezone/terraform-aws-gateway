@@ -9,6 +9,11 @@ variable "instance_type" {
   default     = "t3.nano"
 }
 
+variable "availability_zone" {
+  description = "The AWS region to deploy to"
+  type        = string
+}
+
 variable "replicas" {
   description = "The number of gateway instances to deploy"
   type        = number
