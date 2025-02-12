@@ -13,7 +13,7 @@ locals {
   gateway_count = 4
 
   # Whether to attach Elastic IPs to the Gateway instances. Set to false to restrict the Gateways
-  # to private subnets only.
+  # to private subnets only. Note: using only private subnets for the Gateway will require a NAT in a public subnet.
   attach_public_ips = true
 }
 
