@@ -77,3 +77,9 @@ variable "extra_tags" {
 
   default = {}
 }
+
+variable "aws_eip_ids" {
+  description = "The Elasitc IP ids to attach to the instances. Must be the same length as replicas if provided."
+  type        = list(string)
+  default     = []
+}

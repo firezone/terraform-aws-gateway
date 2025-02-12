@@ -32,21 +32,16 @@ resource "aws_instance" "gateway" {
   }, var.extra_tags)
 }
 
-# Create one Elastic IP per Gateway instance.
-resource "aws_eip" "gateway" {
-  count  = var.attach_public_ips ? var.replicas : 0
-  domain = "vpc"
-}
-
 # Associate the Elastic IPs with the Gateway instances.
 resource "aws_eip_association" "gateway" {
-  count         = var.attach_public_ips ? var.replicas : 0
+  count         = length(var.aws_eip_ids)
   instance_id   = aws_instance.gateway[count.index].id
-  allocation_id = aws_eip.gateway[count.index].id
-}
+  allocation_id = var.aws_eip_ids[count.index]
 
-# Output the Elastic IPs for the Gateway instances.
-output "public_ips" {
-  description = "The public IPs of the Gateway instances"
-  value       = aws_eip.gateway[*].public_ip
+  lifecycle {
+    precondition {
+      condition     = length(var.aws_eip_ids) == 0 || length(var.aws_eip_ids) == var.replicas
+      error_message = "The number of EIPs must match the number of Gateway instances."
+    }
+  }
 }

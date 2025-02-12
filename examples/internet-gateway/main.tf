@@ -1,8 +1,20 @@
 # Change these to match your environment
 locals {
-  region            = "us-east-1"
+  # The region to deploy the Gateway instances in.
+  region = "us-east-1"
+
+  # The availability zone to deploy the Gateway instances in.
   availability_zone = "us-east-1a"
-  firezone_token    = "<YOUR TOKEN HERE>"
+
+  # Generate a token from the admin portal in Sites -> <site> -> Deploy Gateway.
+  firezone_token = "<YOUR TOKEN HERE>"
+
+  # We recommend a minimum of 3 instances for high availability.
+  gateway_count = 4
+
+  # Whether to attach Elastic IPs to the Gateway instances. Set to false to restrict the Gateways
+  # to private subnets only.
+  attach_public_ips = true
 }
 
 module "gateway" {
@@ -30,11 +42,11 @@ module "gateway" {
   # Optional inputs #
   ###################
 
-  # Whether to attach the instances to public IPs.
-  # attach_public_ips = true
+  # Attach existing Elastic IPs. Length must match the number of replicas if provided.
+  aws_eip_ids = aws_eip.gateway[*].id
 
   # We recommend a minimum of 3 instances for high availability.
-  # replicas           = 3
+  replicas = local.gateway_count
 
   # Deploy a specific version of the Gateway. Generally, we recommend using the latest version.
   # firezone_version    = "latest"
@@ -167,6 +179,13 @@ resource "aws_ec2_instance_connect_endpoint" "instance_connect_endpoint" {
   }
 }
 
-output "gateway_ips" {
-  value = module.gateway.public_ips
+resource "aws_eip" "gateway" {
+  count  = local.attach_public_ips ? local.gateway_count : 0
+  domain = "vpc"
+}
+
+# Output the Elastic IPs for the Gateway instances.
+output "public_ips" {
+  description = "The public IPs of the Gateway instances"
+  value       = aws_eip.gateway[*].public_ip
 }
