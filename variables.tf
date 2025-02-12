@@ -9,22 +9,15 @@ variable "instance_type" {
   default     = "t3.nano"
 }
 
-variable "desired_capacity" {
-  description = "The desired number of instances"
-  type        = number
-  default     = 3
+variable "availability_zone" {
+  description = "The AWS region to deploy to"
+  type        = string
 }
 
-variable "min_size" {
-  description = "The minimum number of instances"
+variable "replicas" {
+  description = "The number of gateway instances to deploy"
   type        = number
   default     = 3
-}
-
-variable "max_size" {
-  description = "The maximum number of instances"
-  type        = number
-  default     = 5
 }
 
 variable "firezone_token" {
@@ -41,7 +34,7 @@ variable "firezone_version" {
 }
 
 variable "firezone_name" {
-  description = "Name for the Gateways used in the admin portal"
+  description = "Name for the Gateways, appears in the admin portal"
   type        = string
   default     = "$(hostname)"
 }
@@ -62,9 +55,10 @@ variable "private_subnet" {
   type        = string
 }
 
-variable "public_subnet" {
-  description = "The public subnet id"
-  type        = string
+variable "attach_public_ips" {
+  description = "Whether to attach public IPs to the instances"
+  type        = bool
+  default     = true
 }
 
 variable "instance_security_groups" {
@@ -73,7 +67,7 @@ variable "instance_security_groups" {
 }
 
 variable "extra_tags" {
-  description = "Extra tags for the Auto Scaling group"
+  description = "Extra tags for the instances"
 
   type = map(object({
     key                 = string
@@ -82,4 +76,10 @@ variable "extra_tags" {
   }))
 
   default = {}
+}
+
+variable "aws_eip_ids" {
+  description = "The Elasitc IP ids to attach to the instances. Must be the same length as replicas if provided."
+  type        = list(string)
+  default     = []
 }

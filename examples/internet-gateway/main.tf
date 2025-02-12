@@ -1,7 +1,20 @@
 # Change these to match your environment
 locals {
-  region         = "us-east-1"
-  firezone_token = "YOUR_FIREZONE_TOKEN"
+  # The region to deploy the Gateway instances in.
+  region = "us-east-1"
+
+  # The availability zone to deploy the Gateway instances in.
+  availability_zone = "us-east-1a"
+
+  # Generate a token from the admin portal in Sites -> <site> -> Deploy Gateway.
+  firezone_token = "<YOUR TOKEN HERE>"
+
+  # We recommend a minimum of 3 instances for high availability.
+  gateway_count = 4
+
+  # Whether to attach Elastic IPs to the Gateway instances. Set to false to restrict the Gateways
+  # to private subnets only. Note: using only private subnets for the Gateway will require a NAT in a public subnet.
+  attach_public_ips = true
 }
 
 module "gateway" {
@@ -20,7 +33,6 @@ module "gateway" {
 
   # Attach the Gateways to your VPC and subnets.
   vpc            = aws_vpc.main.id
-  public_subnet  = aws_subnet.public.id
   private_subnet = aws_subnet.private.id
   instance_security_groups = [
     aws_security_group.instance.id
@@ -30,10 +42,11 @@ module "gateway" {
   # Optional inputs #
   ###################
 
+  # Attach existing Elastic IPs. Length must match the number of replicas if provided.
+  aws_eip_ids = aws_eip.gateway[*].id
+
   # We recommend a minimum of 3 instances for high availability.
-  # min_size            = 3
-  # max_size            = 10
-  # desired_capacity    = 10
+  replicas = local.gateway_count
 
   # Deploy a specific version of the Gateway. Generally, we recommend using the latest version.
   # firezone_version    = "latest"
@@ -44,6 +57,9 @@ module "gateway" {
   # Gateways are very lightweight.
   # See https://www.firezone.dev/kb/deploy/gateways#sizing-recommendations.
   # instance_type       = "t3.nano"
+
+  # Availability zone to deploy the instances in.
+  availability_zone = local.availability_zone
 }
 
 data "aws_ami_ids" "ubuntu" {
@@ -67,27 +83,22 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "172.16.0.0/24"
-  map_public_ip_on_launch = true
+  availability_zone = local.availability_zone
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.0.0/24"
+
+  # We will attach a public IP to the instances ourselves.
+  map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "172.16.1.0/24"
+  availability_zone = local.availability_zone
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "172.16.1.0/24"
 }
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
-}
-
-resource "aws_eip" "nat" {
-  domain = "vpc"
-}
-
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
 }
 
 resource "aws_route_table" "public" {
@@ -103,8 +114,8 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
@@ -134,15 +145,8 @@ resource "aws_security_group" "instance" {
 
   egress {
     from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -175,7 +179,13 @@ resource "aws_ec2_instance_connect_endpoint" "instance_connect_endpoint" {
   }
 }
 
-output "nat_public_ip" {
-  description = "The public IP of the NAT gateway"
-  value       = aws_eip.nat.public_ip
+resource "aws_eip" "gateway" {
+  count  = local.attach_public_ips ? local.gateway_count : 0
+  domain = "vpc"
+}
+
+# Output the Elastic IPs for the Gateway instances.
+output "public_ips" {
+  description = "The public IPs of the Gateway instances"
+  value       = aws_eip.gateway[*].public_ip
 }
