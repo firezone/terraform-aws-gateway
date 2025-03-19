@@ -68,14 +68,8 @@ variable "instance_security_groups" {
 
 variable "extra_tags" {
   description = "Extra tags for the instances"
-
-  type = map(object({
-    key                 = string
-    value               = string
-    propagate_at_launch = bool
-  }))
-
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "aws_eip_ids" {
