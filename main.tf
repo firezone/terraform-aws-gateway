@@ -15,7 +15,7 @@ resource "aws_instance" "gateway" {
   set -e
 
   sudo apt-get update
-  sudo apt-get install -y curl uuid-runtime
+  sudo apt-get install -y curl uuid-runtime iptables
 
   FIREZONE_TOKEN="${var.firezone_token}" \
   FIREZONE_VERSION="${var.firezone_version}" \
