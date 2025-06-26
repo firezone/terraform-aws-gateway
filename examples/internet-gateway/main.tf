@@ -10,7 +10,7 @@ locals {
   firezone_token = "<YOUR TOKEN HERE>"
 
   # We recommend a minimum of 3 instances for high availability.
-  gateway_count = 4
+  gateway_count = 3
 
   # Whether to attach Elastic IPs to the Gateway instances. Set to false to restrict the Gateways
   # to private subnets only. Note: using only private subnets for the Gateway will require a NAT in a public subnet.
