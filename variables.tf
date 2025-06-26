@@ -1,5 +1,5 @@
 variable "base_ami" {
-  description = "The base AMI for the instances"
+  description = "The base AMI for the instances. This module assumes a Debian-based AMI."
   type        = string
 }
 
