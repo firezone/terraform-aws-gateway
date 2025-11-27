@@ -77,3 +77,22 @@ variable "aws_eip_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "log_level" {
+  description = "Sets RUST_LOG environment variable which applications should use to configure Rust Logger. Default: 'info'."
+  nullable    = false
+  type        = string
+  default     = "info"
+}
+
+variable "log_format" {
+  description = "Sets FIREZONE_LOG_FORMAT environment variable which applications should use to configure Rust Logger format. Default: 'human'."
+  nullable    = false
+  type        = string
+  default     = "human"
+
+  validation {
+    condition     = contains(["human", "json"], var.log_format)
+    error_message = "log_format must be either 'human' or 'json'."
+  }
+}

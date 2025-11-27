@@ -23,6 +23,8 @@ resource "aws_instance" "gateway" {
   FIREZONE_NAME="${var.firezone_name}" \
   FIREZONE_ID="$(head -c 32 /dev/urandom | sha256sum | cut -d' ' -f1)" \
   FIREZONE_API_URL="${var.firezone_api_url}" \
+  FIREZONE_LOG_FORMAT="${var.log_format}" \
+  RUST_LOG="${var.log_level}" \
   bash <(curl -fsSL https://raw.githubusercontent.com/firezone/firezone/main/scripts/gateway-systemd-install.sh)
 
   EOF
