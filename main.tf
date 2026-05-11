@@ -18,13 +18,16 @@ resource "aws_instance" "gateway" {
   sudo apt-get update
   sudo apt-get install -y curl iptables
 
-  FIREZONE_TOKEN="${var.firezone_token}" \
-  FIREZONE_VERSION="${var.firezone_version}" \
-  FIREZONE_NAME="${var.firezone_name}" \
-  FIREZONE_ID="$(head -c 32 /dev/urandom | sha256sum | cut -d' ' -f1)" \
-  FIREZONE_API_URL="${var.firezone_api_url}" \
-  FIREZONE_LOG_FORMAT="${var.log_format}" \
-  RUST_LOG="${var.log_level}" \
+  export FIREZONE_TOKEN="${var.firezone_token}"
+  export FIREZONE_VERSION="${var.firezone_version}"
+  export FIREZONE_NAME="${var.firezone_name}"
+  export FIREZONE_ID="$(head -c 32 /dev/urandom | sha256sum | cut -d' ' -f1)"
+  export FIREZONE_API_URL="${var.firezone_api_url}"
+  export FIREZONE_LOG_FORMAT="${var.log_format}"
+%{if var.enable_flow_logs~}
+  export FIREZONE_FLOW_LOGS="true"
+%{endif~}
+  export RUST_LOG="${var.log_level}"
   bash <(curl -fsSL https://raw.githubusercontent.com/firezone/firezone/main/scripts/gateway-systemd-install.sh)
 
   EOF

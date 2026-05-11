@@ -96,3 +96,10 @@ variable "log_format" {
     error_message = "log_format must be either 'human' or 'json'."
   }
 }
+
+variable "enable_flow_logs" {
+  description = "Sets FIREZONE_FLOW_LOGS=true for the Gateway when enabled. Default: false."
+  nullable    = false
+  type        = bool
+  default     = false
+}
