@@ -6,11 +6,14 @@ locals {
   # The availability zone to deploy the Gateway instances in.
   availability_zone = "us-east-1a"
 
-  # Generate a token from the admin portal in Sites -> <site> -> Deploy Gateway.
-  firezone_token = "<YOUR TOKEN HERE>"
+  # Generate one single-owner token per Gateway instance from the admin portal
+  # in Sites -> <site> -> Deploy Gateway. One Gateway instance is deployed per
+  # token. We recommend a minimum of 3 instances for high availability.
+  firezone_tokens = ["<TOKEN 1>", "<TOKEN 2>", "<TOKEN 3>"]
 
-  # We recommend a minimum of 3 instances for high availability.
-  gateway_count = 3
+  # Used to create Elastic IPs for the Gateway instances.
+  # One Gateway instance is deployed per token.
+  gateway_count = length(local.firezone_tokens)
 
   # Whether to attach Elastic IPs to the Gateway instances. Set to false to restrict the Gateways
   # to private subnets only. Note: using only private subnets for the Gateway will require a NAT in a public subnet.
@@ -24,9 +27,15 @@ module "gateway" {
   # Required inputs #
   ###################
 
-  # Generate a token from the admin portal in Sites -> <site> -> Deploy Gateway.
-  # Only one token is needed for the cluster.
-  firezone_token = local.firezone_token
+  # Single-owner tokens, one per Gateway instance (bound to one connected
+  # Gateway at a time). The list length must match the number of replicas.
+  firezone_tokens = local.firezone_tokens
+
+  # Legacy: multi-owner tokens share one token across the cluster. Only use
+  # this for existing deployments; set it instead of firezone_tokens and set
+  # replicas to the desired number of instances.
+  # firezone_token = "<YOUR TOKEN HERE>"
+  # replicas       = 3
 
   # Pick an AMI to use. We recommend Ubuntu LTS or Amazon Linux 2.
   base_ami = data.aws_ami_ids.ubuntu.ids[0]
@@ -42,11 +51,8 @@ module "gateway" {
   # Optional inputs #
   ###################
 
-  # Attach existing Elastic IPs. Length must match the number of replicas if provided.
+  # Attach existing Elastic IPs. Length must match the number of Gateway instances if provided.
   aws_eip_ids = aws_eip.gateway[*].id
-
-  # We recommend a minimum of 3 instances for high availability.
-  replicas = local.gateway_count
 
   # Deploy a specific version of the Gateway. Generally, we recommend using the latest version.
   # firezone_version    = "latest"
